@@ -102,9 +102,23 @@ export const enum PermissionLevels {
 }
 
 export const enum Schedules {
+	Birthday = 'birthday',
 	DelayedGiveawayCreate = 'delayedGiveawayCreate',
+	ModerationEndAddRole = 'moderationEndAddRole',
+	ModerationEndBan = 'moderationEndBan',
+	ModerationEndMute = 'moderationEndMute',
+	ModerationEndRemoveRole = 'moderationEndRemoveRole',
+	ModerationEndRestrictionAttachment = 'moderationEndRestrictionAttachment',
+	ModerationEndRestrictionEmbed = 'moderationEndRestrictionEmbed',
+	ModerationEndRestrictionEmoji = 'moderationEndRestrictionEmoji',
+	ModerationEndRestrictionReaction = 'moderationEndRestrictionReaction',
+	ModerationEndRestrictionVoice = 'moderationEndRestrictionVoice',
+	ModerationEndSetNickname = 'moderationEndSetNickname',
+	ModerationEndVoiceMute = 'moderationEndVoiceMute',
+	ModerationEndWarning = 'moderationEndWarning',
 	Poststats = 'poststats',
+	Reminder = 'reminder',
+	RemoveBirthdayRole = 'removeBirthdayRole',
 	SyncResourceAnalytics = 'syncResourceAnalytics',
-	TwitchRefreshSubscriptions = 'twitchRefreshSubscriptions',
-	Reminder = 'reminder'
+	TwitchRefreshSubscriptions = 'twitchRefreshSubscriptions'
 }
