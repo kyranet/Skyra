@@ -1,5 +1,6 @@
 import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { Events } from '#lib/types/Enums';
+import { addReaction } from '#utils/functions';
 import { LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import { sendLoadingMessage } from '#utils/util';
 import { send } from '@skyra/editable-commands';
@@ -29,7 +30,7 @@ export abstract class BaseReactionGame<T> extends BaseGame<T> {
 	protected async onStart(): Promise<unknown> {
 		try {
 			this.message = await sendLoadingMessage(this.message, this.t);
-			for (const reaction of this.reactions) await this.message.react(reaction);
+			for (const reaction of this.reactions) await addReaction(this.message, reaction);
 		} catch {
 			await send(this.message, this.t(LanguageKeys.Misc.UnexpectedIssue)).catch((error) => this.client.emit(Events.Error, error));
 		}

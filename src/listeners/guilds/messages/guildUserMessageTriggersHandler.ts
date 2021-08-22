@@ -1,7 +1,7 @@
 import { GuildSettings, readSettings, TriggerIncludes, writeSettings } from '#lib/database';
 import type { GuildMessage } from '#lib/types';
 import { Events } from '#lib/types/Enums';
-import { canReact } from '#utils/functions';
+import { addReaction, canReact } from '#utils/functions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
 import { RESTJSONErrorCodes } from 'discord-api-types/v9';
@@ -26,7 +26,7 @@ export class UserListener extends Listener {
 
 	private async tryReact(message: GuildMessage, trigger: TriggerIncludes) {
 		try {
-			await message.react(trigger.output);
+			await addReaction(message, trigger.output);
 		} catch (error) {
 			// Message has been deleted
 			if (error.code === RESTJSONErrorCodes.UnknownMessage) return;

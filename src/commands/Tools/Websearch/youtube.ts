@@ -1,6 +1,7 @@
 import { envIsDefined } from '#lib/env';
 import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand } from '#lib/structures';
+import { addReaction } from '#utils/functions';
 import { LLRCData, LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import { ApplyOptions } from '@sapphire/decorators';
 import type { GuildTextBasedChannelTypes } from '@sapphire/discord.js-utilities';
@@ -43,7 +44,7 @@ export class UserCommand extends SkyraCommand {
 		// if Skyra doesn't have permissions for an LLRC, we fallback to the first link
 		if (!message.guild?.me?.permissionsIn(message.channel as GuildTextBasedChannelTypes).has(kPermissions)) return;
 
-		for (const emoji of Object.values(EMOJIS)) await sent.react(emoji);
+		for (const emoji of Object.values(EMOJIS)) await addReaction(sent, emoji);
 
 		let index = 0;
 		const llrc = new LongLivingReactionCollector();
@@ -64,7 +65,7 @@ export class UserCommand extends SkyraCommand {
 					if (!sent.reactions.cache.has(EMOJIS.previous)) {
 						// remove all reactions to preserve the order: previous, stop, next
 						await sent.reactions.removeAll();
-						for (const emoji of Object.values(EMOJIS)) await sent.react(emoji);
+						for (const emoji of Object.values(EMOJIS)) await addReaction(sent, emoji);
 					}
 					await sent.edit(this.getLink(results[index]));
 					await sent.reactions.cache.get(EMOJIS.next)?.users.remove(reaction.userId);
@@ -78,7 +79,7 @@ export class UserCommand extends SkyraCommand {
 						await sent.reactions.cache.get(EMOJIS.previous)?.remove();
 					}
 
-					if (!sent.reactions.cache.has(EMOJIS.next)) await sent.react(EMOJIS.next);
+					if (!sent.reactions.cache.has(EMOJIS.next)) await addReaction(sent, EMOJIS.next);
 					await sent.edit(this.getLink(results[index]));
 					await sent.reactions.cache.get(EMOJIS.previous)?.users.remove(reaction.userId);
 					break;

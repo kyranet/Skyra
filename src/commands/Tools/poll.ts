@@ -1,5 +1,6 @@
 import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand } from '#lib/structures';
+import { addReaction } from '#utils/functions';
 import { sendLoadingMessage } from '#utils/util';
 import { ApplyOptions } from '@sapphire/decorators';
 import { send } from '@skyra/editable-commands';
@@ -25,7 +26,7 @@ export class UserCommand extends SkyraCommand {
 
 		for (const emoji of emojis) {
 			if (response.reactions.cache.size === 20) this.error(LanguageKeys.Commands.Tools.PollReactionLimit);
-			await response.react(emoji);
+			await addReaction(response, emoji);
 		}
 
 		const content = options.map((option, i) => `${emojis[i]} → *${option}*`).join('\n');

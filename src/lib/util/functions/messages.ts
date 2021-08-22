@@ -1,3 +1,4 @@
+import { api } from '#lib/discord/Api';
 import type { SkyraCommand } from '#lib/structures';
 import type { CustomFunctionGet, CustomGet } from '#lib/types';
 import { floatPromise, isGuildMessage, minutes, resolveOnErrorCodes } from '#utils/common';
@@ -6,7 +7,7 @@ import { container } from '@sapphire/framework';
 import { resolveKey, StringMap, TOptions } from '@sapphire/plugin-i18next';
 import type { NonNullObject } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
-import { RESTJSONErrorCodes } from 'discord-api-types/v9';
+import { RESTJSONErrorCodes, Snowflake } from 'discord-api-types/v9';
 import { Message, MessageOptions, Permissions, UserResolvable } from 'discord.js';
 import { setTimeout as sleep } from 'timers/promises';
 
@@ -182,8 +183,8 @@ const enum PromptConfirmationReactions {
 }
 
 async function promptConfirmationReaction(message: Message, response: Message, options: PromptConfirmationMessageOptions) {
-	await response.react(PromptConfirmationReactions.Yes);
-	await response.react(PromptConfirmationReactions.No);
+	await addReaction(response, PromptConfirmationReactions.Yes);
+	await addReaction(response, PromptConfirmationReactions.No);
 
 	const target = container.client.users.resolveId(options.target ?? message.author)!;
 	const reactions = await response.awaitReactions({ filter: (__, user) => user.id === target, time: minutes(1), max: 1 });
@@ -224,4 +225,16 @@ export async function promptForMessage(message: Message, sendOptions: string | M
 	floatPromise(deleteMessage(response));
 
 	return responses.size === 0 ? null : responses.first()!.content;
+}
+
+export async function addReaction(message: Message, emoji: string): Promise<void>;
+export async function addReaction(channelId: Snowflake, messageId: Snowflake, emoji: string): Promise<void>;
+export async function addReaction(channelId: Message | Snowflake, messageId: string | Snowflake, emoji?: string) {
+	return typeof channelId === 'string'
+		? rawAddReaction(channelId, messageId as Snowflake, emoji!)
+		: rawAddReaction(channelId.channelId, channelId.id, messageId);
+}
+
+async function rawAddReaction(channelId: Snowflake, messageId: Snowflake, emoji: string) {
+	await api().channels(channelId).messages(messageId).reactions(emoji, '@me').put();
 }

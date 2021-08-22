@@ -3,6 +3,7 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { minutes } from '#utils/common';
+import { addReaction } from '#utils/functions';
 import { LLRCData, LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import { resolveEmoji } from '#utils/util';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -137,7 +138,7 @@ export class UserCommand extends SkyraCommand {
 
 		game.emojis = emojis;
 		for (const emoji of game.emojis) {
-			await game.response.react(emoji);
+			await addReaction(game.response, emoji);
 		}
 
 		return new Promise<HigherLowerReactions | null>((res) => {

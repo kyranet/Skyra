@@ -3,7 +3,7 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { minutes } from '#utils/common';
-import { deleteMessage, isModerator } from '#utils/functions';
+import { addReaction, deleteMessage, isModerator } from '#utils/functions';
 import { LLRCData, LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import { cleanMentions } from '#utils/util';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -95,7 +95,7 @@ export class UserCommand extends SkyraCommand {
 					game.llrc.setTime(minutes(2));
 					gameMessage = (await message.channel.send(text)) as GuildMessage;
 					for (const emoji of ['🇾', '🇳']) {
-						await gameMessage.react(emoji);
+						await addReaction(gameMessage, emoji);
 					}
 
 					// Ask for verification.

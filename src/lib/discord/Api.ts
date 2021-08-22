@@ -1,4 +1,5 @@
 import { container } from '@sapphire/framework';
+import type { Snowflake } from 'discord-api-types';
 
 export function api() {
 	return Reflect.get(container.client, 'api') as Api;
@@ -14,7 +15,7 @@ interface Api {
 }
 
 interface ApiChannels {
-	(channelId: string): ApiChannelsChannel;
+	(channelId: Snowflake): ApiChannelsChannel;
 }
 
 /**
@@ -110,7 +111,7 @@ interface ApiChannelsChannelMessages {
 	 */
 	'bulk-delete': ApiChannelsChannelMessagesBulkDelete;
 
-	(messageId: string): ApiChannelsChannelMessagesMessage;
+	(messageId: Snowflake): ApiChannelsChannelMessagesMessage;
 }
 
 /**
@@ -155,7 +156,7 @@ interface ApiChannelsChannelMessagesMessageReactions {
 
 	(emoji: string): ApiChannelsChannelMessagesMessageReactionsEmoji;
 	(emoji: string, userId: '@me'): ApiChannelsChannelMessagesMessageReactionsEmojiMe;
-	(emoji: string, userId: string): ApiChannelsChannelMessagesMessageReactionsEmojiUser;
+	(emoji: string, userId: Snowflake): ApiChannelsChannelMessagesMessageReactionsEmojiUser;
 }
 
 /**
@@ -178,9 +179,9 @@ interface ApiChannelsChannelMessagesMessageReactionsEmoji {
 	(userId: '@me'): ApiChannelsChannelMessagesMessageReactionsEmojiMe;
 	<T extends R<ApiChannelsChannelMessagesMessageReactionsEmojiMe>>(userId: '@me', key: T): ApiChannelsChannelMessagesMessageReactionsEmojiMe[T];
 
-	(userId: string): ApiChannelsChannelMessagesMessageReactionsEmojiUser;
+	(userId: Snowflake): ApiChannelsChannelMessagesMessageReactionsEmojiUser;
 	<T extends R<ApiChannelsChannelMessagesMessageReactionsEmojiUser>>(
-		userId: string,
+		userId: Snowflake,
 		key: T
 	): ApiChannelsChannelMessagesMessageReactionsEmojiUser[T];
 }
@@ -300,7 +301,7 @@ interface ApiChannelsChannelPins {
 	 */
 	get: ApiMethods['get'];
 
-	(messageId: string): ApiChannelsChannelPinsMessage;
+	(messageId: Snowflake): ApiChannelsChannelPinsMessage;
 }
 
 /**
@@ -348,9 +349,9 @@ interface ApiGuilds {
 	 */
 	post: ApiMethods['post'];
 
-	(guildId: string): ApiGuildsGuild;
-	<T extends R<ApiGuildsGuild>>(guildId: string, key: T): ApiGuildsGuild[T];
-	<T extends R<ApiGuildsGuild>, S extends R<ApiGuildsGuild[T]>>(guildId: string, key: T, subKey: S): ApiGuildsGuild[T][S];
+	(guildId: Snowflake): ApiGuildsGuild;
+	<T extends R<ApiGuildsGuild>>(guildId: Snowflake, key: T): ApiGuildsGuild[T];
+	<T extends R<ApiGuildsGuild>, S extends R<ApiGuildsGuild[T]>>(guildId: Snowflake, key: T, subKey: S): ApiGuildsGuild[T][S];
 }
 
 /**
@@ -490,8 +491,8 @@ interface ApiGuildsGuildMembers {
 	(memberId: '@me'): ApiGuildsGuildMembersMe;
 	<T extends R<ApiGuildsGuildMembersMe>>(memberId: '@me', key: T): ApiGuildsGuildMembersMe[T];
 
-	(memberId: string): ApiGuildsGuildMembersMember;
-	<T extends R<ApiGuildsGuildMembersMember>>(memberId: string, key: T): ApiGuildsGuildMembersMember[T];
+	(memberId: Snowflake): ApiGuildsGuildMembersMember;
+	<T extends R<ApiGuildsGuildMembersMember>>(memberId: Snowflake, key: T): ApiGuildsGuildMembersMember[T];
 }
 
 /**
@@ -531,7 +532,7 @@ interface ApiGuildsGuildMembersMember {
 }
 
 interface ApiGuildsGuildMembersMemberRoles {
-	(roleId: string): ApiGuildsGuildMembersMemberRolesRole;
+	(roleId: Snowflake): ApiGuildsGuildMembersMemberRolesRole;
 }
 
 /**
@@ -583,7 +584,7 @@ interface ApiGuildsGuildBans {
 	 */
 	get: ApiMethods['get'];
 
-	(userId: string): ApiGuildsGuildBansUser;
+	(userId: Snowflake): ApiGuildsGuildBansUser;
 }
 
 /**
@@ -636,7 +637,7 @@ interface ApiGuildsGuildRoles {
 	 */
 	patch: ApiMethods['patch'];
 
-	(roleId: string): ApiGuildsGuildRolesRole;
+	(roleId: Snowflake): ApiGuildsGuildRolesRole;
 }
 
 /**
@@ -719,8 +720,8 @@ interface ApiGuildsGuildIntegrations {
 	 */
 	patch: ApiMethods['patch'];
 
-	(integrationId: string): ApiGuildsGuildIntegrationsIntegration;
-	<T extends R<ApiGuildsGuildIntegrationsIntegration>>(integrationId: string, key: T): ApiGuildsGuildIntegrationsIntegration[T];
+	(integrationId: Snowflake): ApiGuildsGuildIntegrationsIntegration;
+	<T extends R<ApiGuildsGuildIntegrationsIntegration>>(integrationId: Snowflake, key: T): ApiGuildsGuildIntegrationsIntegration[T];
 }
 
 /**
@@ -882,7 +883,7 @@ interface ApiUsers {
 	<T extends R<ApiUsersMe>>(userId: '@me', key: T): ApiUsersMe[T];
 	<T extends R<ApiUsersMe>, S extends R<ApiUsersMe[T]>>(userId: '@me', key: T, subKey: S): ApiUsersMe[T][S];
 
-	(userId: string): ApiUsersUser;
+	(userId: Snowflake): ApiUsersUser;
 }
 
 /**
@@ -942,7 +943,7 @@ interface ApiUsersMeGuilds {
 	/**
 	 * Guild-related endpoints.
 	 */
-	(guildId: string): ApiUsersMeGuildsGuild;
+	(guildId: Snowflake): ApiUsersMeGuildsGuild;
 }
 
 /**
@@ -1001,7 +1002,7 @@ interface ApiWebhooks {
 	/**
 	 * Access to a webhook by its ID.
 	 */
-	(webhookId: string): ApiWebhooksWebhook;
+	(webhookId: Snowflake): ApiWebhooksWebhook;
 }
 
 /**

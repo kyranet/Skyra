@@ -1,5 +1,6 @@
 import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand } from '#lib/structures';
+import { addReaction } from '#utils/functions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { RESTJSONErrorCodes } from 'discord-api-types/rest/v6';
 import { DiscordAPIError, Message } from 'discord.js';
@@ -23,7 +24,7 @@ export class UserCommand extends SkyraCommand {
 
 	private async react(message: Message, reaction: string) {
 		try {
-			await message.react(reaction);
+			await addReaction(message, reaction);
 		} catch (error) {
 			if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.ReactionWasBlocked) {
 				this.error(LanguageKeys.Commands.Tools.VoteReactionBlocked);

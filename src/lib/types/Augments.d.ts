@@ -4,7 +4,16 @@ import type { DbSet, GuildEntity, SettingsManager } from '#lib/database';
 import type { GuildMemberFetchQueue } from '#lib/discord/GuildMemberFetchQueue';
 import type { ModelStore } from '#lib/grpc';
 import type { WorkerManager } from '#lib/moderation/workers/WorkerManager';
-import type { AnalyticsData, ColorHandler, GiveawayManager, InviteCodeValidEntry, InviteStore, ScheduleManager, SkyraCommand } from '#lib/structures';
+import type {
+	AnalyticsData,
+	ColorHandler,
+	GiveawayManager,
+	InteractionHandlerStore,
+	InviteCodeValidEntry,
+	InviteStore,
+	ScheduleManager,
+	SkyraCommand
+} from '#lib/structures';
 import type { TwitchStreamStatus } from '#lib/types/AnalyticsSchema';
 import type { WebsocketHandler } from '#root/audio/lib/websocket/WebsocketHandler';
 import type { O } from '#utils/constants';
@@ -64,6 +73,10 @@ declare module '@sapphire/pieces' {
 		schedule: ScheduleManager;
 		settings: SettingsManager;
 		workers: WorkerManager;
+	}
+
+	interface StoreRegistryEntries {
+		interactions: InteractionHandlerStore;
 	}
 }
 

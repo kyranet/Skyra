@@ -8,6 +8,6 @@ export class TaskStore extends Store<Task> {
 	 */
 	public constructor() {
 		super(Task as any, { name: 'tasks' });
-		this.container.client.stores.register(this);
+		this.container.stores.register(this);
 	}
 }

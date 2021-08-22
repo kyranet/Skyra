@@ -5,7 +5,7 @@ import type { GuildMessage } from '#lib/types';
 import { Events } from '#lib/types/Enums';
 import { floatPromise, minutes } from '#utils/common';
 import { ZeroWidthSpace } from '#utils/constants';
-import { deleteMessage } from '#utils/functions';
+import { addReaction, deleteMessage } from '#utils/functions';
 import { LLRCData, LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import { sendLoadingMessage } from '#utils/util';
 import { container } from '@sapphire/framework';
@@ -54,7 +54,7 @@ export class SettingsMenu {
 
 	public async init(context: SkyraCommand.Context): Promise<void> {
 		this.response = await sendLoadingMessage(this.message, this.t);
-		await this.response.react(EMOJIS.STOP);
+		await addReaction(this.response, EMOJIS.STOP);
 		this.llrc = new LongLivingReactionCollector().setListener(this.onReaction.bind(this)).setEndListener(this.stop.bind(this));
 		this.llrc.setTime(TIMEOUT);
 		this.messageCollector = this.response.channel.createMessageCollector({
@@ -192,7 +192,7 @@ export class SettingsMenu {
 	private async _reactResponse(emoji: string) {
 		if (!this.response) return;
 		try {
-			await this.response.react(emoji);
+			await addReaction(this.response, emoji);
 		} catch (error) {
 			if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownMessage) {
 				this.response = null;

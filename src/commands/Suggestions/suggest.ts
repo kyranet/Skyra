@@ -3,7 +3,7 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { BrandingColors } from '#utils/constants';
-import { isAdmin } from '#utils/functions';
+import { addReaction, isAdmin } from '#utils/functions';
 import { getImage } from '#utils/util';
 import { ApplyOptions } from '@sapphire/decorators';
 import { canSendMessages } from '@sapphire/discord.js-utilities';
@@ -68,7 +68,7 @@ export class UserCommand extends SkyraCommand {
 
 	private async react(message: GuildMessage, emoji: string, path: keyof GuildEntity) {
 		try {
-			await message.react(emoji);
+			await addReaction(message, emoji);
 		} catch (error) {
 			// If it's not a DiscordAPIError, throw:
 			if (!(error instanceof DiscordAPIError)) throw error;
@@ -80,7 +80,7 @@ export class UserCommand extends SkyraCommand {
 			const defaultEmoji = configurableKeys.get(path)!.default as string;
 			if (emoji === defaultEmoji) throw error;
 
-			await message.react(defaultEmoji);
+			await addReaction(message, defaultEmoji);
 			await writeSettings(message.guild, [[path, defaultEmoji]]);
 		}
 	}
