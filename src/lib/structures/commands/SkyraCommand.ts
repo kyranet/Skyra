@@ -1,6 +1,7 @@
 import type { LanguageHelpDisplayOptions } from '#lib/i18n/LanguageHelp';
 import type { CustomGet } from '#lib/types';
 import { PermissionLevels } from '#lib/types/Enums';
+import { OWNERS } from '#root/config';
 import { seconds } from '#utils/common';
 import { CommandContext, PieceContext, PreconditionContainerArray, UserError } from '@sapphire/framework';
 import { fetchT } from '@sapphire/plugin-i18next';
@@ -25,7 +26,7 @@ export abstract class SkyraCommand extends SubCommandPluginCommand<SkyraCommand.
 	public readonly fullCategory: readonly string[];
 
 	public constructor(context: PieceContext, options: SkyraCommand.Options) {
-		super(context, { cooldownDelay: seconds(10), cooldownLimit: 2, generateDashLessAliases: true, ...options });
+		super(context, { cooldownDelay: seconds(10), cooldownLimit: 2, cooldownFilteredUsers: OWNERS, generateDashLessAliases: true, ...options });
 
 		this.guarded = options.guarded ?? false;
 		this.hidden = options.hidden ?? false;

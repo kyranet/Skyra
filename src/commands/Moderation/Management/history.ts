@@ -3,12 +3,11 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { PermissionLevels } from '#lib/types/Enums';
-import { RequiresPermissions } from '#utils/decorators';
 import { getModeration } from '#utils/functions';
 import { TypeVariation } from '#utils/moderationConstants';
 import { sendLoadingMessage } from '#utils/util';
 import type Collection from '@discordjs/collection';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { chunk, cutText } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
 import { MessageEmbed } from 'discord.js';
@@ -76,7 +75,7 @@ export class UserCommand extends SkyraCommand {
 		return send(message, { embeds: [embed] });
 	}
 
-	@RequiresPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+	@RequiresClientPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 	public async details(message: GuildMessage, args: SkyraCommand.Args) {
 		const target = args.finished ? message.author : await args.pick('userName');
 		const response = await sendLoadingMessage(message, args.t);

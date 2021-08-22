@@ -372,9 +372,9 @@ export function getDisplayAvatar(id: string, user: User | APIUser, options: Imag
 export function parseRange(input: string): number[] {
 	const set = new Set<number>();
 	for (const subset of input.split(',')) {
-		const [, smin, smax] = /(\d+) *\.{2,} *(\d+)/.exec(subset) || [subset, subset, subset];
-		let min = Number(smin);
-		let max = Number(smax);
+		const [, stringMin, stringMax] = /(\d+) *\.{2,} *(\d+)/.exec(subset) || [subset, subset, subset];
+		let min = Number(stringMin);
+		let max = Number(stringMax);
 		if (min > max) [max, min] = [min, max];
 
 		for (let i = Math.max(1, min); i <= max; ++i) set.add(i);
@@ -530,7 +530,7 @@ export function getHighestRole(guild: Guild, roles: readonly string[]) {
 
 /**
  * Fake GraphQL tag that just returns everything passed in as a single combined string
- * @remark used to trick the GraphQL parser into treating some code as GraphQL parseable data for syntax checking
+ * @remark used to trick the GraphQL parser into treating some code as GraphQL parsable data for syntax checking
  * @param gqlData data to pass off as GraphQL code
  */
 export function gql(...args: any[]): string {

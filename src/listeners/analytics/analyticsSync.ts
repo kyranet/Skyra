@@ -9,7 +9,7 @@ import { ApplyOptions } from '@sapphire/decorators';
 export class UserAnalyticsEvent extends AnalyticsListener {
 	public async run(guilds: number, users: number) {
 		const dbSet = this.container.db;
-		const [economyHealth, twitchSubscriptionCount] = await Promise.all([this.fetchEconomyHealth(dbSet), dbSet.twitchStreamSubscriptions.count()]);
+		const [economyHealth, twitchSubscriptionCount] = await Promise.all([this.fetchEconomyHealth(dbSet), dbSet.twitchSubscriptions.count()]);
 
 		this.writePoints([
 			this.syncGuilds(guilds),

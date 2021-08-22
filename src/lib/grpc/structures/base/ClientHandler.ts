@@ -2,7 +2,6 @@ import { envParseString } from '#lib/env';
 import { createReferPromise } from '#utils/common';
 import { Client, credentials, ServiceError } from '@grpc/grpc-js';
 import type { Message } from 'google-protobuf';
-import { Result, Status } from '../../generated/shared_pb';
 import { ResponseError } from '../errors/ResponseError';
 
 export abstract class ClientHandler<C extends Client = Client> {
@@ -14,14 +13,14 @@ export abstract class ClientHandler<C extends Client = Client> {
 		});
 	}
 
-	protected makeCall<T extends Result.AsObject = Result.AsObject>(cb: ClientHandler.AsyncCall<Message>): Promise<T> {
+	protected makeCall<T extends any = any>(cb: ClientHandler.AsyncCall<Message>): Promise<T> {
 		const refer = createReferPromise<T>();
 
 		try {
 			cb((error, response) => {
 				if (error === null) {
 					const parsed = response.toObject() as T;
-					if (parsed.status === Status.SUCCESS) refer.resolve(parsed);
+					if ((parsed as any).status === 'TODO') refer.resolve(parsed);
 					else refer.reject(new ResponseError(parsed));
 				} else {
 					refer.reject(error);

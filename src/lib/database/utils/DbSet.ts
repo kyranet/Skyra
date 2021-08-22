@@ -16,13 +16,14 @@ import { RpgUserItemEntity } from '../entities/RpgUserItemEntity';
 import { ScheduleEntity } from '../entities/ScheduleEntity';
 import { StarboardEntity } from '../entities/StarboardEntity';
 import { SuggestionEntity } from '../entities/SuggestionEntity';
-import { TwitchStreamSubscriptionEntity } from '../entities/TwitchStreamSubscriptionEntity';
 import { UserCooldownEntity } from '../entities/UserCooldownEntity';
 import { UserGameIntegrationEntity } from '../entities/UserGameIntegrationEntity';
 import { UserProfileEntity } from '../entities/UserProfileEntity';
 import { ClientRepository } from '../repositories/ClientRepository';
 import { MemberRepository } from '../repositories/MemberRepository';
 import { UserRepository } from '../repositories/UserRepository';
+import { TwitchSubscriptionEntity } from '../entities/TwitchSubscriptionEntity';
+import { GuildSubscriptionEntity } from '../entities/GuildSubscriptionEntity';
 
 export class DbSet {
 	public readonly connection: Connection;
@@ -30,6 +31,7 @@ export class DbSet {
 	public readonly clients: ClientRepository;
 	public readonly giveaways: Repository<GiveawayEntity>;
 	public readonly guilds: Repository<GuildEntity>;
+	public readonly guildSubscriptions: Repository<GuildSubscriptionEntity>;
 	public readonly members: MemberRepository;
 	public readonly moderations: Repository<ModerationEntity>;
 	public readonly rpgBattles: Repository<RpgBattleEntity>;
@@ -42,7 +44,7 @@ export class DbSet {
 	public readonly schedules: Repository<ScheduleEntity>;
 	public readonly starboards: Repository<StarboardEntity>;
 	public readonly suggestions: Repository<SuggestionEntity>;
-	public readonly twitchStreamSubscriptions: Repository<TwitchStreamSubscriptionEntity>;
+	public readonly twitchSubscriptions: Repository<TwitchSubscriptionEntity>;
 	public readonly users: UserRepository;
 	public readonly userProfiles: Repository<UserProfileEntity>;
 	public readonly userGameIntegrations: Repository<UserGameIntegrationEntity>;
@@ -54,6 +56,7 @@ export class DbSet {
 		this.clients = this.connection.getCustomRepository(ClientRepository);
 		this.giveaways = this.connection.getRepository(GiveawayEntity);
 		this.guilds = this.connection.getRepository(GuildEntity);
+		this.guildSubscriptions = this.connection.getRepository(GuildSubscriptionEntity);
 		this.members = this.connection.getCustomRepository(MemberRepository);
 		this.moderations = this.connection.getRepository(ModerationEntity);
 		this.rpgBattles = this.connection.getRepository(RpgBattleEntity);
@@ -66,7 +69,7 @@ export class DbSet {
 		this.schedules = this.connection.getRepository(ScheduleEntity);
 		this.starboards = this.connection.getRepository(StarboardEntity);
 		this.suggestions = this.connection.getRepository(SuggestionEntity);
-		this.twitchStreamSubscriptions = this.connection.getRepository(TwitchStreamSubscriptionEntity);
+		this.twitchSubscriptions = this.connection.getRepository(TwitchSubscriptionEntity);
 		this.users = this.connection.getCustomRepository(UserRepository);
 		this.userProfiles = this.connection.getRepository(UserProfileEntity);
 		this.userGameIntegrations = this.connection.getRepository(UserGameIntegrationEntity);

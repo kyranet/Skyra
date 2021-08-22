@@ -2,9 +2,8 @@ import { LanguageHelp } from '#lib/i18n/LanguageHelp';
 import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import { isGuildMessage, isPrivateMessage, minutes, safeWrapPromise } from '#utils/common';
-import { RequiresPermissions } from '#utils/decorators';
 import { sendTemporaryMessage } from '#utils/functions';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { UserOrMemberMentionRegex } from '@sapphire/discord-utilities';
 import { Args, container } from '@sapphire/framework';
 import { send } from '@skyra/editable-commands';
@@ -102,7 +101,7 @@ export class UserCommand extends SkyraCommand {
 		if (isGuildMessage(message)) await send(message, args.t(LanguageKeys.Commands.General.HelpDm));
 	}
 
-	@RequiresPermissions(PERMISSIONS_PAGINATED_MESSAGE)
+	@RequiresClientPermissions(PERMISSIONS_PAGINATED_MESSAGE)
 	private async display(message: Message, args: SkyraCommand.Args, index: number | null, context: SkyraCommand.Context) {
 		const prefix = this.getCommandPrefix(context);
 
@@ -142,7 +141,7 @@ export class UserCommand extends SkyraCommand {
 		return display.setIdle(minutes(10));
 	}
 
-	@RequiresPermissions('EMBED_LINKS', 'READ_MESSAGE_HISTORY')
+	@RequiresClientPermissions('EMBED_LINKS', 'READ_MESSAGE_HISTORY')
 	private async buildCommandHelp(message: Message, args: SkyraCommand.Args, command: SkyraCommand, prefixUsed: string) {
 		const builderData = args.t(LanguageKeys.System.HelpTitles);
 

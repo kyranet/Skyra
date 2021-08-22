@@ -3,9 +3,8 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { PermissionLevels } from '#lib/types/Enums';
-import { RequiresPermissions } from '#utils/decorators';
 import { displayEmoji } from '#utils/util';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
 import { chunk } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
@@ -60,7 +59,7 @@ export class UserCommand extends SkyraCommand {
 		return send(message, content);
 	}
 
-	@RequiresPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+	@RequiresClientPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 	public async show(message: GuildMessage) {
 		const [aliases, includes] = await readSettings(message.guild, [GuildSettings.Trigger.Alias, GuildSettings.Trigger.Includes]);
 

@@ -812,9 +812,6 @@ export class GuildEntity extends BaseEntity implements IBaseEntity {
 	@Column('varchar', { name: 'music.allowed-roles', length: 19, array: true, default: () => 'ARRAY[]::VARCHAR[]' })
 	public musicAllowedRoles: string[] = [];
 
-	@Column('jsonb', { name: 'notifications.streams.twitch.streamers', default: () => "'[]'::JSONB" })
-	public notificationsStreamsTwitchStreamers: NotificationsStreamTwitch[] = [];
-
 	@ConfigurableKey({ description: LanguageKeys.Settings.SuggestionsEmojisUpVote, type: 'emoji' })
 	@Column('varchar', { name: 'suggestions.emojis.upvote', length: 128, default: ':ArrowT:694594285487652954' })
 	public suggestionsEmojisUpVote = ':ArrowT:694594285487652954';
@@ -913,45 +910,58 @@ export class GuildEntity extends BaseEntity implements IBaseEntity {
 }
 
 export interface PermissionsNode {
-	id: string;
 	allow: string[];
+
 	deny: string[];
+
+	id: string;
 }
 
 export interface CustomCommand {
-	id: string;
-	embed: boolean;
-	color: number;
 	aliases: string[];
+
+	color: number;
+
 	content: Sentence;
+
+	embed: boolean;
+
+	id: string;
 }
 
 export type CommandAutoDelete = readonly [string, number];
 
 export interface DisabledCommandChannel {
 	channel: string;
+
 	commands: string[];
 }
 
 export interface StickyRole {
-	user: string;
 	roles: string[];
+
+	user: string;
 }
 
 export interface ReactionRole {
-	role: string;
-	emoji: string;
-	message: string | null;
 	channel: string;
+
+	emoji: string;
+
+	message: string | null;
+
+	role: string;
 }
 
 export interface RolesAuto {
 	id: string;
+
 	points: number;
 }
 
 export interface TriggerAlias {
 	input: string;
+
 	output: string;
 }
 
@@ -961,22 +971,6 @@ export interface TriggerIncludes extends TriggerAlias {
 
 export interface UniqueRoleSet {
 	name: string;
+
 	roles: readonly string[];
 }
-
-export const enum NotificationsStreamsTwitchEventStatus {
-	Online,
-	Offline
-}
-
-export interface NotificationsStreamsTwitchStreamer {
-	channel: string;
-	author: string;
-	message: string | null;
-	status: NotificationsStreamsTwitchEventStatus;
-	gamesBlacklist: readonly string[];
-	gamesWhitelist: readonly string[];
-	createdAt: number;
-}
-
-export type NotificationsStreamTwitch = [string, readonly NotificationsStreamsTwitchStreamer[]];

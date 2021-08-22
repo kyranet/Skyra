@@ -105,6 +105,5 @@ export const enum Schedules {
 	DelayedGiveawayCreate = 'delayedGiveawayCreate',
 	Poststats = 'poststats',
 	SyncResourceAnalytics = 'syncResourceAnalytics',
-	TwitchRefreshSubscriptions = 'twitchRefreshSubscriptions',
 	Reminder = 'reminder'
 }

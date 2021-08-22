@@ -1,14 +1,12 @@
-import type { Result, Status } from '#lib/grpc/generated';
-
 export class ResponseError extends Error {
-	public readonly result: Result.AsObject;
+	public readonly result: any;
 
-	public constructor(result: Result.AsObject) {
+	public constructor(result: any) {
 		super(`Received non-OK response: '${result.status}'`);
 		this.result = result;
 	}
 
-	public get status(): Status {
+	public get status(): any {
 		return this.result.status;
 	}
 }

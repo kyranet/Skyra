@@ -3,10 +3,9 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { PermissionLevels } from '#lib/types/Enums';
-import { RequiresPermissions } from '#utils/decorators';
 import { LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import { displayEmoji, resolveEmoji, sendLoadingMessage } from '#utils/util';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { chunk } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
 import { Guild, MessageEmbed } from 'discord.js';
@@ -105,7 +104,7 @@ export class UserCommand extends SkyraCommand {
 		return send(message, content);
 	}
 
-	@RequiresPermissions('EMBED_LINKS')
+	@RequiresClientPermissions('EMBED_LINKS')
 	public async show(message: GuildMessage, args: SkyraCommand.Args) {
 		const reactionRoles = await readSettings(message.guild, GuildSettings.ReactionRoles);
 		if (reactionRoles.length === 0) {

@@ -30,7 +30,6 @@ export class UserListener extends Listener {
 			// Setup the stat updating task
 			await this.initPostStatsTask().catch((error) => this.container.logger.fatal(error));
 			// Setup the Twitch subscriptions refresh task
-			await this.initTwitchRefreshSubscriptionsTask().catch((error) => this.container.logger.fatal(error));
 		} catch (error) {
 			this.container.logger.fatal(error);
 		}
@@ -43,13 +42,6 @@ export class UserListener extends Listener {
 		const { queue } = this.container.schedule;
 		if (!queue.some((task) => task.taskId === Schedules.Poststats)) {
 			await this.container.schedule.add(Schedules.Poststats, '*/10 * * * *', {});
-		}
-	}
-
-	private async initTwitchRefreshSubscriptionsTask() {
-		const { queue } = this.container.schedule;
-		if (!queue.some((task) => task.taskId === Schedules.TwitchRefreshSubscriptions)) {
-			await this.container.schedule.add(Schedules.TwitchRefreshSubscriptions, '@daily');
 		}
 	}
 

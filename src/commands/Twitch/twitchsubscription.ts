@@ -1,38 +1,22 @@
-import {
-	GuildSettings,
-	NotificationsStreamsTwitchEventStatus,
-	NotificationsStreamsTwitchStreamer,
-	NotificationsStreamTwitch,
-	readSettings,
-	TwitchStreamSubscriptionEntity,
-	writeSettings
-} from '#lib/database';
+import { GuildSubscriptionEntity, TwitchSubscriptionEntity } from '#lib/database';
 import { envIsDefined } from '#lib/env';
 import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
-import type { TwitchHelixUsersSearchResult } from '#lib/types/definitions/Twitch';
+import { TwitchEventSubTypes, TwitchHelixUsersSearchResult } from '#lib/types/definitions/Twitch';
 import { PermissionLevels } from '#lib/types/Enums';
-import { days } from '#utils/common';
-import { RequiresPermissions } from '#utils/decorators';
-import { TwitchHooksAction } from '#utils/Notifications/Twitch';
 import { sendLoadingMessage } from '#utils/util';
-import { ApplyOptions } from '@sapphire/decorators';
+import { channelMention } from '@discordjs/builders';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { Args, container } from '@sapphire/framework';
-import { chunk } from '@sapphire/utilities';
+import type { TFunction } from '@sapphire/plugin-i18next';
+import { chunk, isNullish, isNullishOrEmpty } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
 import { Guild, MessageEmbed } from 'discord.js';
-import type { TFunction } from 'i18next';
-import type { EntityManager } from 'typeorm';
-
-type Streamer = TwitchHelixUsersSearchResult;
-type Status = NotificationsStreamsTwitchEventStatus;
-type Entry = NotificationsStreamsTwitchStreamer;
 
 @ApplyOptions<SkyraCommand.Options>({
-	enabled: envIsDefined('TWITCH_CALLBACK', 'TWITCH_CLIENT_ID', 'TWITCH_TOKEN', 'TWITCH_WEBHOOK_TOKEN'),
+	enabled: envIsDefined('TWITCH_CALLBACK', 'TWITCH_CLIENT_ID', 'TWITCH_TOKEN', 'TWITCH_EVENTSUB_SECRET'),
 	aliases: ['twitch-subscription', 't-subscription', 't-sub'],
-	generateDashLessAliases: true,
 	description: LanguageKeys.Commands.Twitch.TwitchSubscriptionDescription,
 	extendedHelp: LanguageKeys.Commands.Twitch.TwitchSubscriptionExtended,
 	permissionLevel: PermissionLevels.Administrator,
@@ -41,269 +25,305 @@ type Entry = NotificationsStreamsTwitchStreamer;
 	subCommands: ['add', 'remove', 'reset', { input: 'show', default: true }]
 })
 export class UserCommand extends SkyraCommand {
-	// eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-	#kSettingsKey = GuildSettings.Notifications.Stream.Twitch.Streamers;
-
 	public async add(message: GuildMessage, args: SkyraCommand.Args) {
 		const streamer = await args.pick(UserCommand.streamer);
 		const channel = await args.pick('channelName');
-		const status = await args.pick(UserCommand.status);
-		const entry: Entry = {
-			author: message.author.id,
-			channel: channel.id,
-			createdAt: Date.now(),
-			gamesBlacklist: [],
-			gamesWhitelist: [],
-			message: await args.rest('string').catch(() => null),
-			status
-		};
+		const subscriptionType = await args.pick(UserCommand.status);
+		const customMessage = await args.rest('string', { maximum: 200 }).catch(() => null);
 
-		await writeSettings(message.guild, async (settings) => {
-			// then retrieve the index of the entry if the guild already subscribed to them.
-			const subscriptionIndex = settings[this.#kSettingsKey].findIndex((sub) => sub[0] === streamer.id);
+		if (subscriptionType === TwitchEventSubTypes.StreamOffline && isNullishOrEmpty(customMessage)) {
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionAddMessageForOfflineRequired);
+		}
 
-			// If the subscription could not be found, we create a new one, otherwise we patch it by creating a new tuple.
-			if (subscriptionIndex === -1) {
-				const subscription: NotificationsStreamTwitch = [streamer.id, [entry]];
-				settings[this.#kSettingsKey].push(subscription);
+		const { twitchSubscriptions, guildSubscriptions } = this.container.db;
 
-				// Insert the entry to the database performing an upsert, if it created the entry, we tell the Twitch manager
-				// to send Twitch a message saying "hey, I want to be notified, can you pass me some data please?"
-				if (await this.upsertSubscription(message.guild, streamer)) {
-					await this.container.client.twitch.subscriptionsStreamHandle(streamer.id, TwitchHooksAction.Subscribe);
-				}
-			} else {
-				// Retrieve the subscription.
-				const raw = settings[this.#kSettingsKey][subscriptionIndex];
-
-				// Check if the streamer was already subscribed for the same channel and status.
-				if (raw[1].some((e) => e.channel === entry.channel && e.status === entry.status)) {
-					this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionAddDuplicated);
-				}
-
-				// Patch creating a clone of the value.
-				const subscription: NotificationsStreamTwitch = [raw[0], [...raw[1], entry]];
-				settings[this.#kSettingsKey].splice(subscriptionIndex, 1, subscription);
-			}
+		// Get a potential pre-existing subscription for this streamer and subscriptionType
+		const streamerForType = await twitchSubscriptions.findOne({
+			where: { streamerId: streamer.id, subscriptionType }
 		});
+		const guildSubscriptionsForGuild = await guildSubscriptions.find({ where: { guildId: message.guild.id, channelId: channel.id } });
+
+		// Check if there is already a subscription for the given streamer, subscription type, and channel:
+		const alreadyHasEntry = guildSubscriptionsForGuild.some(
+			(guildSubscription) =>
+				guildSubscription.subscription.streamerId === streamer.id && guildSubscription.subscription.subscriptionType === subscriptionType
+		);
+
+		// If that is the case then throw an error
+		if (alreadyHasEntry) {
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionAddDuplicated);
+		}
+
+		// Add a new entry to the "guildSubscriptionsForGuild" for streamer, subscription type, channel and message
+		const guildSubscription = new GuildSubscriptionEntity();
+		guildSubscription.guildId = message.guild.id;
+		guildSubscription.channelId = channel.id;
+		guildSubscription.message = customMessage ?? undefined;
+
+		if (streamerForType) {
+			guildSubscription.subscription = streamerForType;
+		} else {
+			// Subscribe to the streamer on the Twitch API, returning the ID of the subscription
+			const subscriptionId = await this.container.client.twitch.subscriptionsStreamHandle(streamer.id, subscriptionType);
+			const twitchSubscriptionEntity = new TwitchSubscriptionEntity();
+
+			twitchSubscriptionEntity.streamerId = streamer.id;
+			twitchSubscriptionEntity.subscriptionType = subscriptionType;
+			twitchSubscriptionEntity.subscriptionId = subscriptionId;
+
+			guildSubscription.subscription = twitchSubscriptionEntity;
+		}
+
+		await guildSubscription.save();
 
 		const content = args.t(
-			status === NotificationsStreamsTwitchEventStatus.Offline
-				? LanguageKeys.Commands.Twitch.TwitchSubscriptionAddSuccessOffline
-				: LanguageKeys.Commands.Twitch.TwitchSubscriptionAddSuccessLive,
+			subscriptionType === TwitchEventSubTypes.StreamOnline
+				? LanguageKeys.Commands.Twitch.TwitchSubscriptionAddSuccessLive
+				: LanguageKeys.Commands.Twitch.TwitchSubscriptionAddSuccessOffline,
 			{ name: streamer.display_name, channel: channel.toString() }
 		);
+
 		return send(message, content);
 	}
 
 	public async remove(message: GuildMessage, args: SkyraCommand.Args) {
+		const guildSubscriptions = await this.getGuildSubscriptions(message.guild);
+
+		// Only get the args if there are any subscriptions to process
 		const streamer = await args.pick(UserCommand.streamer);
 		const channel = await args.pick('channelName');
-		const status = await args.pick(UserCommand.status);
+		const subscriptionType = await args.pick(UserCommand.status);
 
-		await writeSettings(message.guild, async (settings) => {
-			// then retrieve the index of the entry if the guild already subscribed to them.
-			const subscriptionIndex = settings[this.#kSettingsKey].findIndex((sub) => sub[0] === streamer.id);
+		// Get all subscriptions for the provided streamer
+		const streamers = guildSubscriptions.filter((guildSubscription) => guildSubscription.subscription.streamerId === streamer.id);
 
-			// If the subscription could not be found, throw.
-			if (subscriptionIndex === -1) this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveStreamerNotSubscribed);
+		// If there are no subscriptions for this streamer, throw
 
-			// Retrieve the subscription, then find the index for the notification desired to delete.
-			const subscription = settings[this.#kSettingsKey][subscriptionIndex];
-			const entryIndex = subscription[1].findIndex((entry) => entry.channel === channel.id && entry.status === status);
+		if (!streamers.length) {
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveStreamerNotSubscribed, { streamer: streamer.display_name });
+		}
 
-			// If there was no entry with the channel and status specified, throw.
-			if (entryIndex === -1) this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveEntryNotExists);
+		// Get all subscriptions for the specified streamer and status
+		const statuses = streamers.filter((guildSubscription) => guildSubscription.subscription.subscriptionType === subscriptionType);
 
-			// If it was the only entry for said subscription, remove it completely.
-			if (subscription[1].length === 1) {
-				settings[this.#kSettingsKey].splice(subscriptionIndex, 1);
+		// If there are no subscriptions for this status then throw
+		if (!statuses.length) {
+			const statuses = args.t(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowStatus);
 
-				await this.removeSubscription(message.guild, streamer);
-			} else {
-				// Create a clone of the array, remove the one we want to get rid of, create a clone of the subscription, and update.
-				const entries = subscription[1].slice();
-				entries.splice(entryIndex, 1);
-				const updated: NotificationsStreamTwitch = [subscription[0], entries];
-				settings[this.#kSettingsKey].splice(subscriptionIndex, 1, updated);
-			}
-		});
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveStreamerStatusNotMatch, {
+				streamer: streamer.display_name,
+				status: this.getSubscriptionStatus(subscriptionType, statuses)
+			});
+		}
+
+		// Get all subscriptions for this streamer, status and channel
+		const streamerWithStatusHasChannel = statuses.find((guildSubscription) => guildSubscription.channelId === channel.id);
+
+		// If there are no subscriptions configured for this channel then throw
+		if (!streamerWithStatusHasChannel) {
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveNotToProvidedChannel, { channel });
+		}
+
+		// Remove the guild subscription. We always have just 1 left here.
+		await streamerWithStatusHasChannel.remove();
+
+		// Remove the subscription from the twitch API (if needed)
+		await this.removeSubscription(streamerWithStatusHasChannel.subscription.subscriptionId);
 
 		const content = args.t(
-			status === NotificationsStreamsTwitchEventStatus.Offline
-				? LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveSuccessOffline
-				: LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveSuccessLive,
-			{ name: streamer.display_name, channel: channel.toString() }
+			subscriptionType === TwitchEventSubTypes.StreamOnline
+				? LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveSuccessLive
+				: LanguageKeys.Commands.Twitch.TwitchSubscriptionRemoveSuccessOffline,
+			{ name: streamer.display_name, channel: channelMention(channel.id) }
 		);
+
 		return send(message, content);
 	}
 
 	public async reset(message: GuildMessage, args: SkyraCommand.Args) {
+		const guildSubscriptions = await this.getGuildSubscriptions(message.guild);
+
+		// Only get the arg if there are any subscriptions to process
 		const streamer = args.finished ? null : await args.pick(UserCommand.streamer);
+		let count = 0;
 
-		// If the streamer was not defined, reset all entries and purge all entries.
-		if (streamer === null) {
-			const [entries] = await writeSettings(message.guild, (settings) => {
-				const entries = settings[this.#kSettingsKey].reduce((accumulator, subscription) => accumulator + subscription[1].length, 0);
-				if (entries === 0) this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionResetEmpty);
+		const removals: Promise<GuildSubscriptionEntity>[] = [];
 
-				settings[this.#kSettingsKey] = [];
-				return [entries];
-			});
-
-			// Update all entries that include this guild, then iterate over the empty values and remove the empty ones.
-			const { twitchStreamSubscriptions } = this.container.db;
-			await twitchStreamSubscriptions.manager.transaction(async (em) => {
-				const entries = await this.getSubscriptions(em, message.guild.id);
-				const toUpdate: TwitchStreamSubscriptionEntity[] = [];
-				const toDelete: TwitchStreamSubscriptionEntity[] = [];
-				for (const entry of entries) {
-					if (entry.guildIds.length === 1) {
-						toDelete.push(entry);
-					} else {
-						const index = entry.guildIds.indexOf(message.guild.id);
-						if (index === -1) continue;
-
-						entry.guildIds.splice(index, 1);
-						toUpdate.push(entry);
-					}
+		// Loop over all guildSubscriptions and remove them
+		for (const guildSubscription of guildSubscriptions) {
+			// If the streamer is defined
+			if (streamer) {
+				// Then only remove if the streamerId matches
+				if (guildSubscription.subscription.streamerId === streamer.id) {
+					removals.push(guildSubscription.remove());
+					count++;
 				}
-
-				await em.remove(toDelete);
-				await em.save(toUpdate);
-			});
-
-			const content = args.t(LanguageKeys.Commands.Twitch.TwitchSubscriptionResetSuccess, { count: entries });
-			return send(message, content);
+				// Otherwise always remove
+			} else {
+				removals.push(guildSubscription.remove());
+				count++;
+			}
 		}
 
-		/** Remove the subscription for the specified streaming, returning the length of {@link NotificationsStreamsTwitchStreamer} for this entry */
-		const entries = await writeSettings(message.guild, (settings) => {
-			const subscriptionIndex = settings[this.#kSettingsKey].findIndex((sub) => sub[0] === streamer.id);
+		// Remove GuildSubscriptionEntities
+		await Promise.all(removals);
 
-			if (subscriptionIndex === -1) this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionResetStreamerNotSubscribed);
+		// Reset twitch subscriptions
+		await this.resetSubscriptions(streamer);
 
-			const subscription = settings[this.#kSettingsKey][subscriptionIndex];
-
-			settings[this.#kSettingsKey].splice(subscriptionIndex, 1);
-
-			return subscription[1].length;
-		});
-
-		await this.removeSubscription(message.guild, streamer);
-
-		const content = args.t(LanguageKeys.Commands.Twitch.TwitchSubscriptionResetChannelSuccess, { name: streamer.display_name, count: entries });
+		const content = args.t(LanguageKeys.Commands.Twitch.TwitchSubscriptionResetSuccess, { count });
 		return send(message, content);
 	}
 
-	@RequiresPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+	@RequiresClientPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 	public async show(message: GuildMessage, args: SkyraCommand.Args) {
 		const streamer = args.finished ? null : await args.pick(UserCommand.streamer);
 		const { t } = args;
 
-		const guildSubscriptions = await readSettings(message.guild, this.#kSettingsKey);
-
 		// Create the response message.
 		const response = await sendLoadingMessage(message, t);
 
-		// Fetch the content.
-		const content = streamer === null ? await this.showAll(guildSubscriptions, t) : await this.showSingle(guildSubscriptions, streamer, t);
+		// Fetch the content to show in the reply message
+		const lines = isNullish(streamer) ? await this.showAll(message.guild, t) : await this.showSingle(message.guild, streamer, t);
 
 		// Create the pages and the URD to display them.
-		const pages = chunk(content, 10);
+		const pages = chunk(lines, 10);
 		const display = new SkyraPaginatedMessage({
 			template: new MessageEmbed()
 				.setAuthor(message.author.username, message.author.displayAvatarURL({ size: 128, format: 'png', dynamic: true }))
 				.setColor(await this.container.db.fetchColor(message))
 		});
+
 		for (const page of pages) display.addPageEmbed((embed) => embed.setDescription(page.join('\n')));
 
 		// Start the display and return the message.
 		await display.run(response, message.author);
+
 		return response;
 	}
 
-	private async showSingle(guildSubscriptions: NotificationsStreamTwitch[], streamer: Streamer, t: TFunction) {
-		// Retrieve all subscriptions for the guild
-		const subscriptions = guildSubscriptions.find((entry) => entry[0] === streamer.id);
-		if (typeof subscriptions === 'undefined') this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowStreamerNotSubscribed);
+	private async showSingle(guild: Guild, streamer: TwitchHelixUsersSearchResult, t: TFunction) {
+		const guildSubscriptions = await this.getGuildSubscriptions(guild);
 
-		// Print all entries for this guild for this streamer.
+		const subscriptionsForStreamer = guildSubscriptions.filter((guildSubscription) => guildSubscription.subscription.streamerId === streamer.id);
+
+		if (!subscriptionsForStreamer.length) {
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowStreamerNotSubscribed);
+		}
+
+		// Return the line this guild and streamer.
 		const statuses = t(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowStatus);
 		const lines: string[] = [];
-		for (const subscription of subscriptions[1]) {
-			lines.push(`${streamer.display_name} - <#${subscription.channel}> → ${statuses[subscription.status]}`);
+
+		for (const guildSubscription of subscriptionsForStreamer) {
+			lines.push(
+				`${streamer.display_name} - ${channelMention(guildSubscription.channelId)} → ${this.getSubscriptionStatus(
+					guildSubscription.subscription.subscriptionType,
+					statuses
+				)}`
+			);
 		}
 
 		return lines;
 	}
 
-	private async showAll(guildSubscriptions: NotificationsStreamTwitch[], t: TFunction) {
-		// Retrieve all subscriptions for the guild
-		if (guildSubscriptions.length === 0) this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowEmpty);
+	private async showAll(guild: Guild, t: TFunction) {
+		const guildSubscriptions = await this.getGuildSubscriptions(guild);
 
-		// Fetch all usernames and map them by their id.
-		const ids = guildSubscriptions.map((subscriptions) => subscriptions[0]);
-		const profiles = await this.container.client.twitch.fetchUsers(ids, []);
+		// Get all the streamer IDs for this guild, put into a Set to remove duplicates
+		// (i.e. different channels, different subscription types)
+		const streamerIds = new Set([...guildSubscriptions.map((guildSubscription) => guildSubscription.subscription.streamerId)]);
+
+		const profiles = await this.container.client.twitch.fetchUsers(streamerIds, []);
 		const names = new Map<string, string>();
 		for (const profile of profiles.data) names.set(profile.id, profile.display_name);
 
 		// Print all entries for this guild.
 		const statuses = t(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowStatus);
 		const lines: string[] = [];
-		for (const subscriptions of guildSubscriptions) {
-			const name = names.get(subscriptions[0]) || t(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowUnknownUser);
-			for (const subscription of subscriptions[1]) {
-				lines.push(`${name} - <#${subscription.channel}> → ${statuses[subscription.status]}`);
-			}
+
+		for (const guildSubscription of guildSubscriptions) {
+			const name = names.get(guildSubscription.subscription.streamerId) ?? t(LanguageKeys.Commands.Twitch.TwitchSubscriptionShowUnknownUser);
+
+			lines.push(
+				`${name} - ${channelMention(guildSubscription.channelId)} → ${this.getSubscriptionStatus(
+					guildSubscription.subscription.subscriptionType,
+					statuses
+				)}`
+			);
 		}
 
 		return lines;
 	}
 
-	private async getSubscriptions(entityManager: EntityManager, ...guildIds: string[]): Promise<TwitchStreamSubscriptionEntity[]> {
-		return entityManager
-			.createQueryBuilder(TwitchStreamSubscriptionEntity, 'twitchsubs')
-			.where('twitchsubs.guild_ids IN (:ids)', { ids: guildIds })
-			.getMany();
-	}
+	private async removeSubscription(subscriptionId: string) {
+		const { twitchSubscriptions } = this.container.db;
 
-	private async upsertSubscription(guild: Guild, streamer: Streamer) {
-		const { twitchStreamSubscriptions } = this.container.db;
-		const results = await twitchStreamSubscriptions
-			.createQueryBuilder()
-			.insert()
-			.values({
-				id: streamer.id,
-				isStreaming: false,
-				expiresAt: new Date(Date.now() + days(8)),
-				guildIds: [guild.id]
-			})
-			.onConflict(/* sql */ `(id) DO UPDATE SET guild_ids = ARRAY_CAT(twitch_stream_subscription.guild_ids, ARRAY['${guild.id}']::VARCHAR[])`)
-			.returning(['guild_ids'])
-			.execute();
-		return results.raw[0].guild_ids.length === 1;
-	}
+		// Get all subscriptions for the provided streamer and subscription type
+		const subscription = await twitchSubscriptions.findOne({
+			relations: ['guildSubscription'],
+			where: {
+				subscriptionId
+			}
+		});
 
-	private async removeSubscription(guild: Guild, streamer: Streamer) {
-		const { twitchStreamSubscriptions } = this.container.db;
-		const subscription = await twitchStreamSubscriptions.findOne({ id: streamer.id });
+		// If there are no subscriptions for that streamer and subscription type then return
 		if (!subscription) return;
 
-		const index = subscription.guildIds.indexOf(guild.id);
-		if (index === -1) return;
-
-		// If this was the last guild subscribed to this channel, delete it from the database and unsubscribe from the Twitch notifications.
-		if (subscription.guildIds.length === 1) {
-			await subscription.remove();
-			await this.container.client.twitch.subscriptionsStreamHandle(streamer.id, TwitchHooksAction.Unsubscribe);
-		} else {
-			subscription.guildIds.splice(index, 1);
-			await subscription.save();
+		if (subscription.guildSubscription.length === 0) {
+			await Promise.all([
+				this.container.client.twitch.removeSubscription(subscription.subscriptionId), //
+				subscription.remove()
+			]);
 		}
 	}
 
-	private static streamer = Args.make<Streamer>(async (parameter, { argument }) => {
+	private async resetSubscriptions(streamer: TwitchHelixUsersSearchResult | null) {
+		const { twitchSubscriptions } = this.container.db;
+
+		// Get all subscriptions
+		const subscriptions = await twitchSubscriptions.find({
+			relations: ['guildSubscription'],
+			...(!isNullish(streamer) && {
+				where: {
+					streamerId: streamer.id
+				}
+			})
+		});
+
+		// If there are no subscriptions then return
+		if (!subscriptions) return;
+
+		// Loop over all subscriptions
+		for (const subscription of subscriptions) {
+			// If the subscription has no servers then remove it
+			if (subscription.guildSubscription.length === 0) {
+				await Promise.all([
+					this.container.client.twitch.removeSubscription(subscription.subscriptionId), //
+					subscription.remove()
+				]);
+			}
+		}
+	}
+
+	private async getGuildSubscriptions(guild: Guild): Promise<GuildSubscriptionEntity[]> {
+		const { guildSubscriptions } = this.container.db;
+
+		// Get all subscriptions for the current server and channel combination
+		const guildSubscriptionForGuild = await guildSubscriptions.find({ where: { guildId: guild.id } });
+
+		if (guildSubscriptionForGuild.length === 0) {
+			this.error(LanguageKeys.Commands.Twitch.TwitchSubscriptionNoSubscriptions);
+		}
+
+		return guildSubscriptionForGuild;
+	}
+
+	private getSubscriptionStatus(subscriptionType: TwitchEventSubTypes, statuses: { live: string; offline: string }) {
+		return subscriptionType === TwitchEventSubTypes.StreamOnline ? statuses.live : statuses.offline;
+	}
+
+	private static streamer = Args.make<TwitchHelixUsersSearchResult>(async (parameter, { argument }) => {
 		try {
 			const { data } = await container.client.twitch.fetchUsers([], [parameter]);
 			if (data.length > 0) return Args.ok(data[0]);
@@ -313,9 +333,10 @@ export class UserCommand extends SkyraCommand {
 		}
 	});
 
-	private static status = Args.make<Status>((parameter, { args, argument }) => {
+	private static status = Args.make<TwitchEventSubTypes>((parameter, { args, argument }) => {
 		const index = args.t(LanguageKeys.Commands.Twitch.TwitchSubscriptionStatusValues).indexOf(parameter.toLowerCase());
 		if (index === -1) return Args.error({ parameter, argument, identifier: LanguageKeys.Commands.Twitch.TwitchSubscriptionInvalidStatus });
-		return Args.ok(index);
+		if (index === 0) return Args.ok(TwitchEventSubTypes.StreamOnline);
+		return Args.ok(TwitchEventSubTypes.StreamOffline);
 	});
 }

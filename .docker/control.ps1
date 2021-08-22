@@ -9,8 +9,8 @@ function Show-Help {
 	Write-Host ""
 	Write-Host "Usage" -ForegroundColor yellow
 	Write-Host "
-./docker/docker.sh [COMMAND] [ARGS...]
-./docker/docker.sh -h | --help"
+./.docker/control.ps1 [COMMAND] [ARGS...]
+./.docker/control.ps1 -h | --help"
 	Write-Host ""
 	Write-Host "Commands" -ForegroundColor yellow
 	Write-Host "
@@ -28,7 +28,7 @@ update		Updates a running service"
 function Step-Run {
 	Param (
 		[String]$Command = $( Read-Host "What command do you want to run? If unsure type help" ),
-		[string]$Service
+		[String]$Service
 	)
 
 	Begin {

@@ -80,7 +80,8 @@ export abstract class SettingsCollection<T extends IBaseEntity> extends Collecti
 	public read<K extends keyof T>(key: string, paths: readonly K[]): Promise<T[K][]>;
 	public read<K extends keyof T>(key: string, path: K): Promise<T[K]>;
 	public read<R>(key: string, cb: SettingsCollectionCallback<T, R>): Promise<R>;
-	public async read<R>(key: string, cb: keyof T | readonly (keyof T)[] | SettingsCollectionCallback<T, R>): Promise<any> {
+	public read(key: string): Promise<T>;
+	public async read<R>(key: string, cb?: keyof T | readonly (keyof T)[] | SettingsCollectionCallback<T, R>): Promise<any> {
 		const lock = this.acquireLock(key);
 		try {
 			// Acquire a read lock:
@@ -88,6 +89,10 @@ export abstract class SettingsCollection<T extends IBaseEntity> extends Collecti
 
 			// Fetch the entry:
 			const settings = this.get(key) ?? (await this.processFetch(key));
+
+			if (typeof cb === 'undefined') {
+				return settings;
+			}
 
 			// If a callback was given, call it:
 			if (typeof cb === 'function') {

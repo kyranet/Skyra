@@ -12,11 +12,12 @@ import type { Leaderboard } from '#utils/Leaderboard';
 import type { LLRCData, LongLivingReactionCollector } from '#utils/LongLivingReactionCollector';
 import type { Twitch } from '#utils/Notifications/Twitch';
 import type { Piece, Store } from '@sapphire/framework';
+import type { ApiResponse } from '@sapphire/plugin-api';
 import type { Nullish, PickByValue } from '@sapphire/utilities';
 import type { Image } from 'canvas-constructor/skia';
 import type { Guild, GuildChannel, Message, MessageEmbed, NewsChannel, Role, Snowflake, TextChannel, User, VoiceChannel } from 'discord.js';
 import type { Redis } from 'ioredis';
-import type { TaskErrorPayload } from './definitions';
+import type { TaskErrorPayload, TwitchEventSubEvent, TwitchEventSubOnlineEvent } from './definitions';
 import type { Scope } from './definitions/ArgumentTypes';
 import type { MessageAcknowledgeable } from './Discord';
 import type { Events } from './Enums';
@@ -159,6 +160,8 @@ declare module '@sapphire/framework' {
 		emit(event: Events.MusicConnect, queue: Queue, voiceChannelID: string): boolean;
 		emit(event: Events.ResourceAnalyticsSync): boolean;
 		emit(event: Events.TwitchStreamHookedAnalytics, status: TwitchStreamStatus): boolean;
+		emit(events: Events.TwitchStreamOnline, event: TwitchEventSubOnlineEvent): boolean;
+		emit(events: Events.TwitchStreamOffline, event: TwitchEventSubEvent): boolean;
 		emit(event: Events.TaskError, error: Error, payload: TaskErrorPayload): boolean;
 		emit(event: string | symbol, ...args: any[]): boolean;
 	}

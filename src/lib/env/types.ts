@@ -109,7 +109,7 @@ export interface SkyraEnv {
 	TOP_GG_TOKEN: string;
 	TWITCH_CLIENT_ID: string;
 	TWITCH_TOKEN: string;
-	TWITCH_WEBHOOK_TOKEN: string;
+	TWITCH_EVENTSUB_SECRET: string;
 	WEBHOOK_DISCORDS_TOKEN: string;
 	WEBHOOK_TOPGG_TOKEN: string;
 	WEEB_SH_TOKEN: string;

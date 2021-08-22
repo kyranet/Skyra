@@ -4,7 +4,6 @@ export * as Channels from './Channels';
 export * as Events from './Events';
 export * as Messages from './Messages';
 export * as Music from './Music';
-export * as Notifications from './Notifications/All';
 export * as Permissions from './Permissions';
 export * as Roles from './Roles';
 export * as Selfmod from './Selfmod/All';

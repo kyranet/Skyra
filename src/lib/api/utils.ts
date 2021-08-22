@@ -1,7 +1,7 @@
 import * as GuildSettings from '#lib/database/keys/settings/All';
 import { readSettings } from '#lib/database/settings';
 import type { SkyraCommand } from '#lib/structures';
-import { createFunctionInhibitor } from '#utils/decorators';
+import { createFunctionPrecondition } from '@sapphire/decorators';
 import { container } from '@sapphire/framework';
 import { ApiRequest, ApiResponse, HttpCodes, LoginData } from '@sapphire/plugin-api';
 import { RateLimitManager } from '@sapphire/ratelimits';
@@ -16,7 +16,7 @@ function isAdmin(member: GuildMember, roles: readonly string[]): boolean {
 }
 
 export const authenticated = () =>
-	createFunctionInhibitor(
+	createFunctionPrecondition(
 		(request: ApiRequest) => Boolean(request.auth?.token),
 		(_request: ApiRequest, response: ApiResponse) => response.error(HttpCodes.Unauthorized)
 	);
@@ -29,7 +29,7 @@ export const authenticated = () =>
 export function ratelimit(time: number, limit = 1, auth = false) {
 	const manager = new RateLimitManager(time, limit);
 	const xRateLimitLimit = time;
-	return createFunctionInhibitor(
+	return createFunctionPrecondition(
 		(request: ApiRequest, response: ApiResponse) => {
 			const id = (auth ? request.auth!.id : request.headers['x-forwarded-for'] || request.connection.remoteAddress) as string;
 			const bucket = manager.acquire(id);

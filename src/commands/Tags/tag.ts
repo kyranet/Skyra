@@ -5,9 +5,9 @@ import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { PermissionLevels } from '#lib/types/Enums';
 import { parse as parseColour } from '#utils/Color';
-import { RequiresLevel, RequiresPermissions } from '#utils/decorators';
+import { RequiresLevel } from '#utils/decorators';
 import { sendLoadingMessage } from '#utils/util';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { chunk, codeBlock, cutText } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
 import { Identifiers, ParserUnexpectedTokenError, PartType, UserError } from '@skyra/tags';
@@ -148,7 +148,7 @@ export class UserCommand extends SkyraCommand {
 		return send(message, { content, allowedMentions: { users: [], roles: [] } });
 	}
 
-	@RequiresPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+	@RequiresClientPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 	public async list(message: GuildMessage, args: SkyraCommand.Args) {
 		// Get tags, prefix, and language
 		const [tags, prefix] = await readSettings(message.guild, [GuildSettings.CustomCommands, GuildSettings.Prefix]);
@@ -170,7 +170,7 @@ export class UserCommand extends SkyraCommand {
 		return response;
 	}
 
-	@RequiresPermissions(['EMBED_LINKS'])
+	@RequiresClientPermissions(['EMBED_LINKS'])
 	public async show(message: GuildMessage, args: SkyraCommand.Args) {
 		const id = (await args.pick('string')).toLowerCase();
 		const tags = await readSettings(message.guild, GuildSettings.CustomCommands);

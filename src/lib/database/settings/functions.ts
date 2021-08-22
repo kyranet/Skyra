@@ -49,7 +49,8 @@ export function readSettings<
 export function readSettings<KX extends K>(guild: GuildResolvable, paths: readonly KX[]): Promise<V[KX][]>;
 export function readSettings<K1 extends K>(guild: GuildResolvable, path: K1): Promise<V[K1]>;
 export function readSettings<R>(guild: GuildResolvable, cb: SettingsCollectionCallback<V, R>): Promise<R>;
-export function readSettings(guild: GuildResolvable, paths: any) {
+export function readSettings(guild: GuildResolvable): Promise<V>;
+export function readSettings(guild: GuildResolvable, paths?: any) {
 	const resolved = container.client.guilds.resolveId(guild);
 	if (resolved === null) throw new TypeError(`Cannot resolve "guild" to a Guild instance.`);
 	return container.settings.guilds.read(resolved, paths);

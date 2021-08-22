@@ -4,10 +4,9 @@ import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import type { GuildMessage } from '#lib/types';
 import { CdnUrls } from '#lib/types/Constants';
 import { BrandingColors, Emojis } from '#utils/constants';
-import { RequiresPermissions } from '#utils/decorators';
 import { promptConfirmation } from '#utils/functions';
 import { sendLoadingMessage } from '#utils/util';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions } from '@sapphire/decorators';
 import { Args, CommandContext } from '@sapphire/framework';
 import { roundNumber } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
@@ -27,7 +26,7 @@ const CDN_URL = CdnUrls.BannersBasePath;
 export class UserCommand extends SkyraCommand {
 	private display: SkyraPaginatedMessage = null!;
 
-	@RequiresPermissions(['EMBED_LINKS'])
+	@RequiresClientPermissions(['EMBED_LINKS'])
 	public async buy(message: GuildMessage, args: SkyraCommand.Args, { prefix }: CommandContext) {
 		const { users } = this.container.db;
 		const banner = await args.pick(UserCommand.banner);
@@ -98,7 +97,7 @@ export class UserCommand extends SkyraCommand {
 		return send(message, content);
 	}
 
-	@RequiresPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+	@RequiresClientPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 	public async show(message: GuildMessage, args: SkyraCommand.Args) {
 		const allOrUser = args.finished ? 'all' : await args.pick(UserCommand.allOrUser);
 		return allOrUser === 'all' ? this.buyList(message, args.t) : this.userList(message, args.t);

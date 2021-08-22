@@ -3,9 +3,8 @@ import { LanguageKeys } from '#lib/i18n/languageKeys';
 import { SkyraCommand, SkyraPaginatedMessage } from '#lib/structures';
 import { Schedules } from '#lib/types/Enums';
 import { minutes } from '#utils/common';
-import { RequiresGuildContext, RequiresPermissions } from '#utils/decorators';
 import { sendLoadingMessage } from '#utils/util';
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions, RequiresClientPermissions, RequiresGuildContext } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
 import { chunk, cutText } from '@sapphire/utilities';
 import { send } from '@skyra/editable-commands';
@@ -55,7 +54,7 @@ export class UserCommand extends SkyraCommand {
 	}
 
 	@RequiresGuildContext((message: Message, args: SkyraCommand.Args) => send(message, args.t(LanguageKeys.Preconditions.GuildOnly)))
-	@RequiresPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+	@RequiresClientPermissions(['ADD_REACTIONS', 'EMBED_LINKS', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 	public async list(message: Message, args: SkyraCommand.Args) {
 		const { client } = this.container;
 		const tasks = client.schedules.queue.filter((task) => task.data && task.data.user === message.author.id);
@@ -96,7 +95,7 @@ export class UserCommand extends SkyraCommand {
 		return send(message, content);
 	}
 
-	@RequiresPermissions(['EMBED_LINKS'])
+	@RequiresClientPermissions(['EMBED_LINKS'])
 	public async show(message: Message, args: SkyraCommand.Args) {
 		const task = await args.pick(UserCommand.task);
 

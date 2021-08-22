@@ -47,6 +47,7 @@ RUN yarn run build
 FROM base AS runner
 
 ENV NODE_ENV="production"
+ENV NODE_OPTIONS="--max_old_space_size=4096"
 
 COPY --chown=node:node scripts/audio/ scripts/audio/
 COPY --chown=node:node scripts/workerTsLoader.js scripts/workerTsLoader.js
@@ -57,4 +58,4 @@ RUN yarn workspaces focus --all --production
 
 USER node
 
-CMD [ "yarn", "run", "start", "--max-old-space-size=4096"]
+CMD [ "yarn", "run", "start"]
