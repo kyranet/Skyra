@@ -1885,10 +1885,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/diff@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@types/diff@npm:6.0.0"
-  checksum: 10/ad2dc8ca9e7594c7d06b60832ef1a51c717e39fd92434043be35a5a5a038f61ee7e1b9e89d1e2a49b8c4fa0f020166d1d41f7ccbd62f6cadc9ca1bd3e5df4e5b
+"@types/diff@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@types/diff@npm:7.0.0"
+  checksum: 10/11464fe70a81a0d02fdaad4ff4b0a0a5ac71825fa32dde9a98a1a82b1cac50dda302fb1621bea71db6c254e00ce002ea14543cc3502ac44f012598ca2c0fbcae
   languageName: node
   linkType: hard
 
@@ -7364,7 +7364,7 @@ __metadata:
     "@skyra/jaro-winkler": "npm:^1.1.1"
     "@skyra/twitch-helpers": "npm:^2.0.1"
     "@types/backoff": "npm:^2.5.5"
-    "@types/diff": "npm:^6.0.0"
+    "@types/diff": "npm:^7.0.0"
     "@types/he": "npm:^1.2.3"
     "@types/node": "npm:^22.10.5"
     "@types/pg": "npm:^8.11.10"
