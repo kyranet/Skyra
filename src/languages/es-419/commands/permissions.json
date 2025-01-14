@@ -1,0 +1,14 @@
+{
+	"name": "permisos",
+	"description": "Obtén los permisos del usuario",
+	"contextMenuName": "Inspeccionar Permisos",
+	"optionsUserName": "usuario",
+	"optionsUserDescription": "El usuario cuyos permisos inspeccionar",
+	"optionsListAllName": "listar-todo",
+	"optionsListAllDescription": "Si mostrar o no permisos que no son de moderación (por defecto: False)",
+	"optionsListMissingName": "lista-no-concedidos",
+	"optionsListMissingDescription": "Si mostrar o no los permisos no concedidos (por defecto: False)",
+	"optionsShowName": "mostrar",
+	"optionsShowDescription": "Si mostrar o no el mensaje públicamente (por defecto: Falso)",
+	"title": "Permisos para {{username}} ({{id}})"
+}

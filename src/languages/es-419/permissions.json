@@ -5,7 +5,9 @@
 	"BanMembers": "Bloquear Miembros",
 	"ChangeNickname": "Cambiar Apodo",
 	"Connect": "Conectar",
+	"CreateEvents": "Crear Eventos",
 	"CreateExpressions": "Crear Expresiones",
+	"CreateGuildExpressions": "Crear Expresiones",
 	"CreateInstantInvite": "Crear Invitación Instantánea",
 	"CreatePrivateThreads": "Crear hilos privados",
 	"CreatePublicThreads": "Crear hilos públicos",
@@ -30,6 +32,7 @@
 	"RequestToSpeak": "Solicitud para Hablar",
 	"SendMessages": "Enviar Mensajes",
 	"SendMessagesInThreads": "Enviar mensajes en hilos",
+	"SendPolls": "Crear Encuestas",
 	"SendTTSMessages": "Enviar Mensajes Texto A Voz",
 	"SendVoiceMessages": "Enviar mensajes de voz",
 	"Speak": "Hablar",
@@ -39,10 +42,11 @@
 	"UseExternalEmojis": "Usar Emojis Externos",
 	"UseExternalSounds": "Usar Sonidos Externos",
 	"UseExternalStickers": "Usar Stickers Externos",
-	"UseSoundboard": "Usar panel de sonidos",
+	"UseSoundboard": "Usar tablero de sonido",
 	"UseVAD": "Usar Actividad de Voz",
 	"ViewAuditLog": "Ver Registro de Auditoría",
 	"ViewChannel": "Ver Canales",
 	"ViewCreatorMonetizationAnalytics": "Ver Análisis de Monetización del Creador",
-	"ViewGuildInsights": "Ver Información del Servidor"
+	"ViewGuildInsights": "Ver Información del Servidor",
+	"UseExternalApps": "Usar aplicaciones externas"
 }
