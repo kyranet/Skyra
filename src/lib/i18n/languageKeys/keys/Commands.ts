@@ -6,6 +6,7 @@ export * as Fun from '#lib/i18n/languageKeys/keys/commands/Fun';
 export * as Games from '#lib/i18n/languageKeys/keys/commands/Games';
 export * as General from '#lib/i18n/languageKeys/keys/commands/General';
 export * as Info from '#lib/i18n/languageKeys/keys/commands/Info';
+export * as Lockdown from '#lib/i18n/languageKeys/keys/commands/Lockdown';
 export * as Management from '#lib/i18n/languageKeys/keys/commands/Management';
 export * as Snipe from '#lib/i18n/languageKeys/keys/commands/Snipe';
 export * as Moderation from '#lib/i18n/languageKeys/keys/commands/Moderation';

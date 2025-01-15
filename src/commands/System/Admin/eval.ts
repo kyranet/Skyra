@@ -116,8 +116,7 @@ export class UserCommand extends SkyraCommand {
 					},
 					structures: {
 						...(await import('#lib/structures')),
-						data: await import('#lib/structures/data'),
-						managers: await import('#lib/structures/managers')
+						data: await import('#lib/structures/data')
 					}
 				},
 				container: this.container,

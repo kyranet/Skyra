@@ -274,7 +274,12 @@ export class ModerationManagerEntry<Type extends TypeVariation = TypeVariation> 
 	}
 
 	#isMatchingTask(task: ScheduleEntry) {
-		return task.data !== null && task.data.caseID === this.id && task.data.guildID === this.guild.id;
+		return (
+			task.data !== null && //
+			'caseID' in task.data &&
+			task.data.caseID === this.id &&
+			task.data.guildID === this.guild.id
+		);
 	}
 
 	#setDuration(duration: bigint | number | null) {
