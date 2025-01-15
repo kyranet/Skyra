@@ -97,7 +97,7 @@
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
 		"@types/backoff": "^2.5.5",
-		"@types/diff": "^6.0.0",
+		"@types/diff": "^7.0.0",
 		"@types/he": "^1.2.3",
 		"@types/node": "^22.10.5",
 		"@types/pg": "^8.11.10",
